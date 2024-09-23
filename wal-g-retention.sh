@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Fetch the list of pods with role=master across all namespaces
-pod_list=$(kubectl get pods --all-namespaces -l spilo-role=master -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.metadata.namespace}{"\n"}{end}')
+pod_list=$(kubectl get pods --all-namespaces -l role=master -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.metadata.namespace}{"\n"}{end}')
 
 # Check if the pod_list is not empty
 if [ -z "$pod_list" ]; then
@@ -13,15 +13,13 @@ fi
 echo "$pod_list" | while read -r pod_name namespace; do
     echo "Processing pod: $pod_name in namespace: $namespace"
 
-    # Exec into the postgres container as the postgres user and modify the script
+    # Exec into the postgres container and modify the script as the postgres user
     kubectl exec -n $namespace $pod_name -- bash -c "
-        # Run commands as the postgres user
         sudo -u postgres bash -c '
-            # Path to the postgres_backup.sh script
             SCRIPT_PATH=\"/scripts/postgres_backup.sh\"
 
             # Replace the specified line in the script
-            sed -i \"s/done < <(\$WAL_E backup-list 2> \/dev\/null | sed '0,\/^name\s*\\\(last_\\\)\\?modified\s*/d')/done < <(\$WAL_E backup-list 2> \/dev\/null | sed '0,\/^backup_name\s*\\\(last_\\\)\\?modified\s*/d')/\" \$SCRIPT_PATH
+            sed -i \"s|done < <(\\\$WAL_E backup-list 2> /dev/null | sed \\'0,/^name\\\\s*\\\\(last_\\\\)\\\\?modified\\\\s*/d\\')|done < <(\\\$WAL_E backup-list 2> /dev/null | sed \\'0,/^backup_name\\\\s*\\\\(last_\\\\)\\\\?modified\\\\s*/d\\')|\" \$SCRIPT_PATH
 
             echo \"Modified backup script in pod: $pod_name\"
         '
