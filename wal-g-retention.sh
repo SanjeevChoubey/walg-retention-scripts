@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Fetch the list of pods with spilo-role=master across all namespaces
-pod_list=$(kubectl get pods --all-namespaces -l spilo-role=master -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.metadata.namespace}{"\n"}{end}')
+pod_list=$(kubectl get pods --all-namespaces -l application=spilo,spilo-role=master -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.metadata.namespace}{"\n"}{end}')
 
 # Check if the pod_list is not empty
 if [ -z "$pod_list" ]; then
