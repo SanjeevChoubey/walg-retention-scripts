@@ -5,7 +5,7 @@ LOCAL_SCRIPT_PATH="./postgres_backup.sh"
 REMOTE_SCRIPT_PATH="/scripts/postgres_backup.sh"
 
 # Fetch the list of pods with role=master and application=spilo across all namespaces
-pod_list=$(kubectl get pods --all-namespaces -l role=master,application=spilo -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.metadata.namespace}{"\n"}{end}')
+pod_list=$(kubectl get pods --all-namespaces -l spilo-role=master,application=spilo -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.metadata.namespace}{"\n"}{end}')
 
 # Check if the pod_list is not empty
 if [ -z "$pod_list" ]; then
