@@ -13,15 +13,18 @@ fi
 echo "$pod_list" | while read -r pod_name namespace; do
     echo "Processing pod: $pod_name in namespace: $namespace"
 
-    # Exec into the postgres container and modify the script as the postgres user
+    # Exec into the postgres container and replace the entire postgres_backup.sh file
     kubectl exec -n $namespace $pod_name -- bash -c "
-        sudo -u postgres bash -c '
-            SCRIPT_PATH=\"/scripts/postgres_backup.sh\"
+        SCRIPT_PATH='/scripts/postgres_backup.sh'
+        TEMP_PATH='/tmp/postgres_backup.sh'
 
-            # Replace the specified line in the script
-            sed -i \"s|done < <(\\\$WAL_E backup-list 2> /dev/null | sed \\'0,/^name\\\\s*\\\\(last_\\\\)\\\\?modified\\\\s*/d\\')|done < <(\\\$WAL_E backup-list 2> /dev/null | sed \\'0,/^backup_name\\\\s*\\\\(last_\\\\)\\\\?modified\\\\s*/d\\')|\" \$SCRIPT_PATH
+        # Download the new version of postgres_backup.sh from the Spilo repository
+        curl -sSL https://raw.githubusercontent.com/zalando/spilo/c547abe3e4ae802d94b3702a925e743bf8c35df5/postgres-appliance/scripts/postgres_backup.sh -o \$TEMP_PATH
 
-            echo \"Modified backup script in pod: $pod_name\"
-        '
+        # Replace the current script with the downloaded one
+        mv \$TEMP_PATH \$SCRIPT_PATH
+        chmod +x \$SCRIPT_PATH
+
+        echo 'Replaced backup script in pod: $pod_name'
     "
 done
