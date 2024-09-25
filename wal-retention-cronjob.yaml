@@ -8,6 +8,7 @@ spec:
     spec:
       template:
         spec:
+          serviceAccountName: cluster-gw  # Use the cluster-gw service account
           containers:
           - name: backup-script-modifier
             image: dockersanjeev/backup-script-modifier:latest
